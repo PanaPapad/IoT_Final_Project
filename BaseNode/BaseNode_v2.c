@@ -51,6 +51,15 @@ void discovery_handler(struct simple_udp_connection *c,
 	static struct ctimer ct;
 	ctimer_set(&ct, CLOCK_SECOND*5, (void *)channel_free_callback, NULL);
   }
+  else if(strcmp((char *)data, "SILENCE!") == 0) {
+	LOG_INFO("Received silence message from ");
+	LOG_INFO_6ADDR(sender_addr);
+	LOG_INFO_("\n");
+	channel_free = 0;
+	//Create ctimer to set the channel free again
+	static struct ctimer ct;
+	ctimer_set(&ct, CLOCK_SECOND, (void *)channel_free_callback, NULL);
+  }
 }
 
 PROCESS(unicast_process, "Unicast with Discovery");
@@ -71,10 +80,14 @@ PROCESS_THREAD(unicast_process, ev, data)
 		if(channel_free){
 			uip_ipaddr_t addr;
 			uip_create_linklocal_allnodes_mcast(&addr); // Create multicast address
-			LOG_INFO("Sending discovery message\n");
+			LOG_INFO("Base Node Sending discovery message\n");
 			simple_udp_sendto(&discovery_conn, "Discovery", 10, &addr);
 		}
 		etimer_reset(&discovery_timer);
     }
     PROCESS_END();
 }
+
+
+
+
